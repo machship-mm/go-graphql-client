@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"go-graphql-client"
+	"github.com/machship-mm/go-graphql-client"
 )
 
 func TestNewScalars(t *testing.T) {

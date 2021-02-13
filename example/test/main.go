@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"go-graphql-client"
 	"log"
+
+	"github.com/machship-mm/go-graphql-client"
 )
 
 func main() {

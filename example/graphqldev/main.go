@@ -14,7 +14,7 @@ import (
 	"net/http/httptest"
 	"os"
 
-	graphql "go-graphql-client"
+	graphql "github.com/machship-mm/go-graphql-client"
 
 	graphqlserver "github.com/graph-gophers/graphql-go"
 	"github.com/graph-gophers/graphql-go/example/starwars"

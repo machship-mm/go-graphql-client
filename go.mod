@@ -1,4 +1,4 @@
-module go-graphql-client
+module github.com/machship-mm/go-graphql-client
 
 go 1.16
 
