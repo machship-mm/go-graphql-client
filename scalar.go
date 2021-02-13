@@ -1,51 +1,202 @@
 package graphql
 
-// Note: These custom types are meant to be used in queries for now.
-// But the plan is to switch to using native Go types (string, int, bool, time.Time, etc.).
-// See https://github.com/shurcooL/githubv4/issues/9 for details.
-//
-// These custom types currently provide documentation, and their use
-// is required for sending outbound queries. However, native Go types
-// can be used for unmarshaling. Once https://github.com/shurcooL/githubv4/issues/9
-// is resolved, native Go types can completely replace these.
-
-type (
-	// Boolean represents true or false values.
-	Boolean bool
-
-	// Float represents signed double-precision fractional values as
-	// specified by IEEE 754.
-	Float float64
-
-	// ID represents a unique identifier that is Base64 obfuscated. It
-	// is often used to refetch an object or as key for a cache. The ID
-	// type appears in a JSON response as a String; however, it is not
-	// intended to be human-readable. When expected as an input type,
-	// any string (such as "VXNlci0xMA==") or integer (such as 4) input
-	// value will be accepted as an ID.
-	ID interface{}
-
-	// Int represents non-fractional signed whole numeric values.
-	// Int can represent values between -(2^31) and 2^31 - 1.
-	Int int32
-
-	// String represents textual data as UTF-8 character sequences.
-	// This type is most often used by GraphQL to represent free-form
-	// human-readable text.
-	String string
+import (
+	"encoding/json"
+	"time"
 )
 
-// NewBoolean is a helper to make a new *Boolean.
-func NewBoolean(v Boolean) *Boolean { return &v }
+type Query struct {
+	Data interface{} `graphql:"data"`
+}
 
-// NewFloat is a helper to make a new *Float.
-func NewFloat(v Float) *Float { return &v }
+type GqlID struct {
+	ID string `json:"id,omitempty"`
+}
 
-// NewID is a helper to make a new *ID.
-func NewID(v ID) *ID { return &v }
+func NewIDStruct(x string) GqlID {
+	nw := NewID(x)
+	return *nw
+}
 
-// NewInt is a helper to make a new *Int.
-func NewInt(v Int) *Int { return &v }
+func NewID(x string) *GqlID { return &GqlID{x} }
 
-// NewString is a helper to make a new *String.
-func NewString(v String) *String { return &v }
+func (id *GqlID) MarshalJSON() ([]byte, error) {
+	return json.Marshal(id.ID)
+}
+
+func (id *GqlID) UnmarshalJSON(data []byte) error {
+	var s *string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	if s != nil {
+		id.ID = *s
+	}
+
+	return nil
+}
+
+type GqlBool struct {
+	Bool  bool
+	Valid bool // Valid is true if Bool is not NULL
+}
+
+func NewBoolStruct(x bool) GqlBool {
+	nw := NewBool(x)
+	return *nw
+}
+
+func NewBool(x bool) *GqlBool { return &GqlBool{Bool: x, Valid: true} }
+
+func (nb GqlBool) MarshalJSON() ([]byte, error) {
+	if nb.Valid {
+		return json.Marshal(nb.Bool)
+	}
+	return json.Marshal(nil)
+}
+
+func (nb *GqlBool) UnmarshalJSON(data []byte) error {
+	var b *bool
+	if err := json.Unmarshal(data, &b); err != nil {
+		return err
+	}
+	if b != nil {
+		nb.Valid = true
+		nb.Bool = *b
+	} else {
+		nb.Valid = false
+	}
+	return nil
+}
+
+type GqlFloat64 struct {
+	Float64 float64
+	Valid   bool // Valid is true if Float64 is not NULL
+}
+
+func NewFloat64Struct(x float64) GqlFloat64 {
+	nw := NewFloat64(x)
+	return *nw
+}
+
+func NewFloat64(x float64) *GqlFloat64 { return &GqlFloat64{Float64: x, Valid: true} }
+
+func (nf GqlFloat64) MarshalJSON() ([]byte, error) {
+	if nf.Valid {
+		return json.Marshal(nf.Float64)
+	}
+	return json.Marshal(nil)
+}
+
+func (nf *GqlFloat64) UnmarshalJSON(data []byte) error {
+	var f *float64
+	if err := json.Unmarshal(data, &f); err != nil {
+		return err
+	}
+	if f != nil {
+		nf.Valid = true
+		nf.Float64 = *f
+	} else {
+		nf.Valid = false
+	}
+	return nil
+}
+
+type GqlInt64 struct {
+	Int64 int64
+	Valid bool // Valid is true if Int64 is not NULL
+}
+
+func NewInt64Struct(x int64) GqlInt64 {
+	nw := NewInt64(x)
+	return *nw
+}
+
+func NewInt64(x int64) *GqlInt64 { return &GqlInt64{Int64: x, Valid: true} }
+
+func (ni GqlInt64) MarshalJSON() ([]byte, error) {
+	if ni.Valid {
+		return json.Marshal(ni.Int64)
+	}
+	return json.Marshal(nil)
+}
+
+func (ni *GqlInt64) UnmarshalJSON(data []byte) error {
+	var i *int64
+	if err := json.Unmarshal(data, &i); err != nil {
+		return err
+	}
+	if i != nil {
+		ni.Valid = true
+		ni.Int64 = *i
+	} else {
+		ni.Valid = false
+	}
+	return nil
+}
+
+type GqlString struct {
+	String string
+	Valid  bool // Valid is true if String is not NULL
+}
+
+func NewStringStruct(x string) GqlString {
+	nw := NewString(x)
+	return *nw
+}
+
+func NewString(x string) *GqlString { return &GqlString{String: x, Valid: true} }
+
+func (ns GqlString) MarshalJSON() ([]byte, error) {
+	if ns.Valid {
+		return json.Marshal(ns.String)
+	}
+	return json.Marshal(nil)
+}
+
+func (ns *GqlString) UnmarshalJSON(data []byte) error {
+	var s *string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	if s != nil {
+		ns.Valid = true
+		ns.String = *s
+	} else {
+		ns.Valid = false
+	}
+	return nil
+}
+
+type GqlTime struct {
+	Time  time.Time
+	Valid bool // Valid is true if Time is not NULL
+}
+
+func NewTimeStruct(x time.Time) GqlTime {
+	nw := NewTime(x)
+	return *nw
+}
+
+func NewTime(x time.Time) *GqlTime { return &GqlTime{Time: x, Valid: true} }
+
+func (nt GqlTime) MarshalJSON() ([]byte, error) {
+	if nt.Valid {
+		return json.Marshal(nt.Time)
+	}
+	return json.Marshal(nil)
+}
+
+func (nt *GqlTime) UnmarshalJSON(data []byte) error {
+	var t *time.Time
+	if err := json.Unmarshal(data, &t); err != nil {
+		return err
+	}
+	if t != nil {
+		nt.Valid = true
+		nt.Time = *t
+	} else {
+		nt.Valid = false
+	}
+	return nil
+}

@@ -14,10 +14,11 @@ import (
 	"net/http/httptest"
 	"os"
 
+	graphql "go-graphql-client"
+
 	graphqlserver "github.com/graph-gophers/graphql-go"
 	"github.com/graph-gophers/graphql-go/example/starwars"
 	"github.com/graph-gophers/graphql-go/relay"
-	graphql "github.com/hasura/go-graphql-client"
 )
 
 func main() {
@@ -58,20 +59,20 @@ func run() error {
 	*/
 	var q struct {
 		Hero struct {
-			ID   graphql.ID
-			Name graphql.String
+			ID   graphql.GqlID
+			Name graphql.GqlString
 		}
 		Character struct {
-			Name    graphql.String
+			Name    graphql.GqlString
 			Friends []struct {
-				Name     graphql.String
-				Typename graphql.String `graphql:"__typename"`
+				Name     graphql.GqlString
+				Typename graphql.GqlString `graphql:"__typename"`
 			}
-			AppearsIn []graphql.String
+			AppearsIn []graphql.GqlString
 		} `graphql:"character(id: $characterID)"`
 	}
 	variables := map[string]interface{}{
-		"characterID": graphql.ID("1003"),
+		"characterID": "1003",
 	}
 	err = client.Query(context.Background(), &q, variables)
 	if err != nil {

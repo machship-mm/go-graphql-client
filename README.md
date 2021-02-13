@@ -141,7 +141,7 @@ Then, define a `variables` map with their values:
 
 ```Go
 variables := map[string]interface{}{
-	"id":   graphql.ID(id),
+	"id":   graphql.GqlID(id),
 	"unit": starwars.LengthUnit("METER"),
 }
 ```

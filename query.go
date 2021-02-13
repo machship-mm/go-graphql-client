@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/hasura/go-graphql-client/ident"
+	"go-graphql-client/ident"
 )
 
 func constructQuery(v interface{}, variables map[string]interface{}, name string) string {
@@ -88,8 +88,19 @@ func writeArgumentType(w io.Writer, t reflect.Type, value bool) {
 	default:
 		// Named type. E.g., "Int".
 		name := t.Name()
-		if name == "string" { // HACK: Workaround for https://github.com/shurcooL/githubv4/issues/12.
-			name = "ID"
+		switch name {
+		// case "string":
+		// 	name = "ID"
+		case "GqlBool":
+			name = "Boolean"
+		case "GqlFloat64":
+			name = "Float!"
+		case "GqlInt64":
+			name = "Int!"
+		case "GqlString":
+			name = "String!"
+		case "GqlTime":
+			name = "DateTime!"
 		}
 		io.WriteString(w, name)
 	}

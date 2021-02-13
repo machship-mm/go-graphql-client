@@ -78,7 +78,7 @@ type subscription struct {
 	query     string
 	variables map[string]interface{}
 	handler   func(data *json.RawMessage, err error)
-	started   Boolean
+	started   bool
 }
 
 // SubscriptionClient is a GraphQL subscription client.
@@ -91,7 +91,7 @@ type SubscriptionClient struct {
 	cancel           context.CancelFunc
 	subscribersMu    sync.Mutex
 	timeout          time.Duration
-	isRunning        Boolean
+	isRunning        bool
 	readLimit        int64 // max size of response message. Default 10 MB
 	log              func(args ...interface{})
 	createConn       func(sc *SubscriptionClient) (WebsocketConn, error)
@@ -194,7 +194,7 @@ func (sc *SubscriptionClient) OnDisconnected(fn func()) *SubscriptionClient {
 	return sc
 }
 
-func (sc *SubscriptionClient) setIsRunning(value Boolean) {
+func (sc *SubscriptionClient) setIsRunning(value bool) {
 	sc.subscribersMu.Lock()
 	sc.isRunning = value
 	sc.subscribersMu.Unlock()

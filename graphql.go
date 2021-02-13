@@ -8,7 +8,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/hasura/go-graphql-client/internal/jsonutil"
+	"go-graphql-client/internal/jsonutil"
+
 	"golang.org/x/net/context/ctxhttp"
 )
 
@@ -153,6 +154,11 @@ func (c *Client) do(ctx context.Context, op operationType, v interface{}, variab
 	if err != nil {
 		return err
 	}
+
+	bufStr := buf.String()
+	_ = bufStr
+	fmt.Println(bufStr)
+
 	resp, err := ctxhttp.Post(ctx, c.httpClient, c.url, "application/json", &buf)
 	if err != nil {
 		return err
@@ -173,6 +179,8 @@ func (c *Client) do(ctx context.Context, op operationType, v interface{}, variab
 		return err
 	}
 	if out.Data != nil {
+		lData := *out.Data
+		fmt.Println(string([]byte(lData)))
 		err := jsonutil.UnmarshalGraphQL(*out.Data, v)
 		if err != nil {
 			// TODO: Consider including response body in returned error, if deemed helpful.

@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/hasura/go-graphql-client"
+	"go-graphql-client"
 )
 
 func TestClient_Query_partialDataWithErrorResponse(t *testing.T) {
@@ -43,10 +43,10 @@ func TestClient_Query_partialDataWithErrorResponse(t *testing.T) {
 
 	var q struct {
 		Node1 *struct {
-			ID graphql.ID
+			ID *graphql.GqlID
 		} `graphql:"node1: node(id: \"MDEyOklzc3VlQ29tbWVudDE2OTQwNzk0Ng==\")"`
 		Node2 *struct {
-			ID graphql.ID
+			ID *graphql.GqlID
 		} `graphql:"node2: node(id: \"NotExist\")"`
 	}
 
@@ -63,7 +63,7 @@ func TestClient_Query_partialDataWithErrorResponse(t *testing.T) {
 		t.Errorf("got error: %v, want: %v", got, want)
 	}
 
-	if q.Node1 == nil || q.Node1.ID != "MDEyOklzc3VlQ29tbWVudDE2OTQwNzk0Ng==" {
+	if q.Node1 == nil || q.Node1.ID != graphql.NewID("MDEyOklzc3VlQ29tbWVudDE2OTQwNzk0Ng==") {
 		t.Errorf("got wrong q.Node1: %v", q.Node1)
 	}
 	if q.Node2 != nil {
@@ -93,7 +93,7 @@ func TestClient_Query_noDataWithErrorResponse(t *testing.T) {
 
 	var q struct {
 		User struct {
-			Name graphql.String
+			Name graphql.GqlString
 		}
 	}
 	err := client.Query(context.Background(), &q, nil)
@@ -103,7 +103,7 @@ func TestClient_Query_noDataWithErrorResponse(t *testing.T) {
 	if got, want := err.Error(), "Field 'user' is missing required arguments: login"; got != want {
 		t.Errorf("got error: %v, want: %v", got, want)
 	}
-	if q.User.Name != "" {
+	if q.User.Name.String != "" {
 		t.Errorf("got non-empty q.User.Name: %v", q.User.Name)
 	}
 
@@ -122,7 +122,7 @@ func TestClient_Query_errorStatusCode(t *testing.T) {
 
 	var q struct {
 		User struct {
-			Name graphql.String
+			Name graphql.GqlString
 		}
 	}
 	err := client.Query(context.Background(), &q, nil)
@@ -132,7 +132,7 @@ func TestClient_Query_errorStatusCode(t *testing.T) {
 	if got, want := err.Error(), `non-200 OK status code: 500 Internal Server Error body: "important message\n"`; got != want {
 		t.Errorf("got error: %v, want: %v", got, want)
 	}
-	if q.User.Name != "" {
+	if q.User.Name.String != "" {
 		t.Errorf("got non-empty q.User.Name: %v", q.User.Name)
 	}
 }

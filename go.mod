@@ -1,6 +1,6 @@
-module github.com/hasura/go-graphql-client
+module go-graphql-client
 
-go 1.14
+go 1.16
 
 require (
 	github.com/google/uuid v1.1.2

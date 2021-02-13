@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	graphql "github.com/hasura/go-graphql-client"
-	"github.com/hasura/go-graphql-client/internal/jsonutil"
+	graphql "go-graphql-client"
+	"go-graphql-client/internal/jsonutil"
 )
 
 func TestUnmarshalGraphQL_benchmark(t *testing.T) {
@@ -23,7 +23,7 @@ func TestUnmarshalGraphQL_benchmark(t *testing.T) {
 	*/
 	type query struct {
 		Viewer struct {
-			Login     graphql.String
+			Login     graphql.GqlString
 			CreatedAt time.Time
 		}
 	}
@@ -38,7 +38,7 @@ func TestUnmarshalGraphQL_benchmark(t *testing.T) {
 		t.Fatal(err)
 	}
 	var want query
-	want.Viewer.Login = "shurcooL-test"
+	want.Viewer.Login.String = "shurcooL-test"
 	want.Viewer.CreatedAt = time.Unix(1498709521, 0).UTC()
 	if !reflect.DeepEqual(got, want) {
 		t.Error("not equal")
@@ -48,7 +48,7 @@ func TestUnmarshalGraphQL_benchmark(t *testing.T) {
 func BenchmarkUnmarshalGraphQL(b *testing.B) {
 	type query struct {
 		Viewer struct {
-			Login     graphql.String
+			Login     graphql.GqlString
 			CreatedAt time.Time
 		}
 	}
@@ -65,7 +65,7 @@ func BenchmarkUnmarshalGraphQL(b *testing.B) {
 			b.Fatal(err)
 		}
 		var want query
-		want.Viewer.Login = "shurcooL-test"
+		want.Viewer.Login.String = "shurcooL-test"
 		want.Viewer.CreatedAt = now
 		if !reflect.DeepEqual(got, want) {
 			b.Error("not equal")
@@ -76,7 +76,7 @@ func BenchmarkUnmarshalGraphQL(b *testing.B) {
 func BenchmarkJSONUnmarshal(b *testing.B) {
 	type query struct {
 		Viewer struct {
-			Login     graphql.String
+			Login     graphql.GqlString
 			CreatedAt time.Time
 		}
 	}
@@ -93,7 +93,7 @@ func BenchmarkJSONUnmarshal(b *testing.B) {
 			b.Fatal(err)
 		}
 		var want query
-		want.Viewer.Login = "shurcooL-test"
+		want.Viewer.Login.String = "shurcooL-test"
 		want.Viewer.CreatedAt = now
 		if !reflect.DeepEqual(got, want) {
 			b.Error("not equal")

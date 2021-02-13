@@ -12,7 +12,7 @@ import (
 	"os"
 	"time"
 
-	graphql "github.com/hasura/go-graphql-client"
+	graphql "go-graphql-client"
 )
 
 func main() {
@@ -50,8 +50,8 @@ func run() error {
 	*/
 	var sub struct {
 		User struct {
-			ID   graphql.ID
-			Name graphql.String
+			ID   graphql.GqlID
+			Name graphql.GqlString
 		} `graphql:"users(limit: $limit, order_by: { id: desc })"`
 	}
 	type Int int
