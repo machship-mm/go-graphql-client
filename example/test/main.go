@@ -14,7 +14,6 @@ func main() {
 
 	var query struct {
 		QueryUser []struct {
-			ID       graphql.GqlID
 			Username graphql.GqlString
 			Name     graphql.GqlString
 			Note     graphql.GqlString
@@ -33,7 +32,7 @@ func main() {
 			UserShared: UserShared{
 				Username: graphql.NewStringStruct("abc"),
 				Name:     graphql.NewStringStruct("ABC"),
-				Note:     graphql.NewStringStruct("note ABC"),
+				// Note:     graphql.NewStringStruct("note ABC"),
 			},
 			Password: graphql.NewStringStruct("password1"),
 		},
@@ -46,6 +45,34 @@ func main() {
 		},
 	}
 
+	// var mutation struct {
+	// 	AddUser struct {
+	// 		User []User
+	// 	} `graphql:"addUser(input: $input)"`
+	// }
+
+	// vars := map[string]interface{}{
+	// 	"input": input,
+	// }
+
+	// err = client.Mutate(context.Background(), &mutation, vars)
+	// if err != nil {
+	// 	// Handle error.
+	// 	log.Fatalln(err)
+	// }
+
+	// fmt.Printf("%+v\n", mutation.AddUser)
+
+	saveTest(client, AddUserInputContainer{input})
+}
+
+type InterfaceTest interface {
+	GetList() interface{}
+}
+
+func saveTest(client *graphql.Client, input InterfaceTest) {
+	var err error
+
 	var mutation struct {
 		AddUser struct {
 			User []User
@@ -53,7 +80,7 @@ func main() {
 	}
 
 	vars := map[string]interface{}{
-		"input": input,
+		"input": input.GetList(),
 	}
 
 	err = client.Mutate(context.Background(), &mutation, vars)
@@ -70,8 +97,16 @@ type AddUserInput struct {
 	Password graphql.GqlString `json:"password,omitempty"`
 }
 
+type AddUserInputContainer struct {
+	List interface{}
+}
+
+func (aui AddUserInputContainer) GetList() interface{} {
+	return aui.List
+}
+
 type User struct {
-	ID graphql.GqlID
+	ID *graphql.GqlString
 	UserShared
 }
 

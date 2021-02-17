@@ -3,6 +3,7 @@ package graphql
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"reflect"
 	"sort"
@@ -13,7 +14,7 @@ import (
 func constructQuery(v interface{}, variables map[string]interface{}, name string) string {
 	query := query(v)
 	if len(variables) > 0 {
-		return "query " + name + "(" + queryArguments(variables) + ")" + query
+		return "query " + name + "(" + queryArguments(variables, false) + ")" + query
 	}
 
 	if name != "" {
@@ -25,7 +26,7 @@ func constructQuery(v interface{}, variables map[string]interface{}, name string
 func constructMutation(v interface{}, variables map[string]interface{}, name string) string {
 	query := query(v)
 	if len(variables) > 0 {
-		return "mutation " + name + "(" + queryArguments(variables) + ")" + query
+		return "mutation " + name + "(" + queryArguments(variables, true) + ")" + query
 	}
 	if name != "" {
 		return "mutation " + name + query
@@ -36,7 +37,7 @@ func constructMutation(v interface{}, variables map[string]interface{}, name str
 func constructSubscription(v interface{}, variables map[string]interface{}, name string) string {
 	query := query(v)
 	if len(variables) > 0 {
-		return "subscription " + name + "(" + queryArguments(variables) + ")" + query
+		return "subscription " + name + "(" + queryArguments(variables, false) + ")" + query
 	}
 	if name != "" {
 		return "subscription " + name + query
@@ -47,7 +48,7 @@ func constructSubscription(v interface{}, variables map[string]interface{}, name
 // queryArguments constructs a minified arguments string for variables.
 //
 // E.g., map[string]interface{}{"a": Int(123), "b": NewBoolean(true)} -> "$a:Int!$b:Boolean".
-func queryArguments(variables map[string]interface{}) string {
+func queryArguments(variables map[string]interface{}, isMutation bool) string {
 	// Sort keys in order to produce deterministic output for testing purposes.
 	// TODO: If tests can be made to work with non-deterministic output, then no need to sort.
 	keys := make([]string, 0, len(variables))
@@ -61,7 +62,7 @@ func queryArguments(variables map[string]interface{}) string {
 		io.WriteString(&buf, "$")
 		io.WriteString(&buf, k)
 		io.WriteString(&buf, ":")
-		writeArgumentType(&buf, reflect.TypeOf(variables[k]), true)
+		writeArgumentType(&buf, reflect.TypeOf(variables[k]), true, isMutation)
 		// Don't insert a comma here.
 		// Commas in GraphQL are insignificant, and we want minified output.
 		// See https://facebook.github.io/graphql/October2016/#sec-Insignificant-Commas.
@@ -72,10 +73,13 @@ func queryArguments(variables map[string]interface{}) string {
 // writeArgumentType writes a minified GraphQL type for t to w.
 // value indicates whether t is a value (required) type or pointer (optional) type.
 // If value is true, then "!" is written at the end of t.
-func writeArgumentType(w io.Writer, t reflect.Type, value bool) {
-	if t.Kind() == reflect.Ptr {
+func writeArgumentType(w io.Writer, t reflect.Type, value, isMutation bool) {
+	if t.Kind() == reflect.Ptr && !isMutation {
 		// Pointer is an optional type, so no "!" at the end of the pointer's underlying type.
-		writeArgumentType(w, t.Elem(), false)
+		writeArgumentType(w, t.Elem(), false, isMutation)
+		return
+	} else if t.Kind() == reflect.Ptr {
+		writeArgumentType(w, t.Elem(), true, isMutation)
 		return
 	}
 
@@ -83,7 +87,7 @@ func writeArgumentType(w io.Writer, t reflect.Type, value bool) {
 	case reflect.Slice, reflect.Array:
 		// List. E.g., "[Int]".
 		io.WriteString(w, "[")
-		writeArgumentType(w, t.Elem(), true)
+		writeArgumentType(w, t.Elem(), true, isMutation)
 		io.WriteString(w, "]")
 	default:
 		// Named type. E.g., "Int".
@@ -117,16 +121,19 @@ func writeArgumentType(w io.Writer, t reflect.Type, value bool) {
 // E.g., struct{Foo Int, BarBaz *Boolean} -> "{foo,barBaz}".
 func query(v interface{}) string {
 	var buf bytes.Buffer
-	writeQuery(&buf, reflect.TypeOf(v), false)
+	seen := make(map[string]struct{})
+	writeQuery(&buf, reflect.TypeOf(v), false, "")
+	fmt.Println(seen)
 	return buf.String()
 }
 
 // writeQuery writes a minified query for t to w.
 // If inline is true, the struct fields of t are inlined into parent struct.
-func writeQuery(w io.Writer, t reflect.Type, inline bool) {
+// Seen is used to stop infinite loops
+func writeQuery(w io.Writer, t reflect.Type, inline bool, inverseName string) {
 	switch t.Kind() {
 	case reflect.Ptr, reflect.Slice:
-		writeQuery(w, t.Elem(), false)
+		writeQuery(w, t.Elem(), false, inverseName)
 	case reflect.Struct:
 		// If the type implements json.Unmarshaler, it's a scalar. Don't expand it.
 		if reflect.PtrTo(t).Implements(jsonUnmarshaler) {
@@ -136,20 +143,29 @@ func writeQuery(w io.Writer, t reflect.Type, inline bool) {
 			io.WriteString(w, "{")
 		}
 		for i := 0; i < t.NumField(); i++ {
+			f := t.Field(i)
+			value, ok := f.Tag.Lookup("graphql")
+			if value == "-" {
+				//skip (this is 'omit')
+				continue
+			} else if value == "" {
+				value = ident.ParseMixedCaps(f.Name).ToLowerCamelCase()
+			}
+			if inverseName == value {
+				continue //Don't allow recursion
+			}
+			thisInverseName, _ := f.Tag.Lookup("hasInverse")
+			// if thisInverseName != "" {
+			// 	fmt.Println()
+			// }
 			if i != 0 {
 				io.WriteString(w, ",")
 			}
-			f := t.Field(i)
-			value, ok := f.Tag.Lookup("graphql")
 			inlineField := f.Anonymous && !ok
 			if !inlineField {
-				if ok {
-					io.WriteString(w, value)
-				} else {
-					io.WriteString(w, ident.ParseMixedCaps(f.Name).ToLowerCamelCase())
-				}
+				io.WriteString(w, value)
 			}
-			writeQuery(w, f.Type, inlineField)
+			writeQuery(w, f.Type, inlineField, thisInverseName)
 		}
 		if !inline {
 			io.WriteString(w, "}")

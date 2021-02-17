@@ -59,7 +59,7 @@ func run() error {
 	*/
 	var q struct {
 		Hero struct {
-			ID   graphql.GqlID
+			ID   graphql.GqlString
 			Name graphql.GqlString
 		}
 		Character struct {

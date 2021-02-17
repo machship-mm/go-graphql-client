@@ -50,7 +50,7 @@ func run() error {
 	*/
 	var sub struct {
 		User struct {
-			ID   graphql.GqlID
+			ID   graphql.GqlString
 			Name graphql.GqlString
 		} `graphql:"users(limit: $limit, order_by: { id: desc })"`
 	}

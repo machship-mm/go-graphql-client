@@ -43,10 +43,10 @@ func TestClient_Query_partialDataWithErrorResponse(t *testing.T) {
 
 	var q struct {
 		Node1 *struct {
-			ID *graphql.GqlID
+			ID *graphql.GqlString
 		} `graphql:"node1: node(id: \"MDEyOklzc3VlQ29tbWVudDE2OTQwNzk0Ng==\")"`
 		Node2 *struct {
-			ID *graphql.GqlID
+			ID *graphql.GqlString
 		} `graphql:"node2: node(id: \"NotExist\")"`
 	}
 
@@ -63,7 +63,7 @@ func TestClient_Query_partialDataWithErrorResponse(t *testing.T) {
 		t.Errorf("got error: %v, want: %v", got, want)
 	}
 
-	if q.Node1 == nil || q.Node1.ID != graphql.NewID("MDEyOklzc3VlQ29tbWVudDE2OTQwNzk0Ng==") {
+	if q.Node1 == nil || q.Node1.ID != graphql.NewString("MDEyOklzc3VlQ29tbWVudDE2OTQwNzk0Ng==") {
 		t.Errorf("got wrong q.Node1: %v", q.Node1)
 	}
 	if q.Node2 != nil {

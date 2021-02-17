@@ -9,33 +9,6 @@ type Query struct {
 	Data interface{} `graphql:"data"`
 }
 
-type GqlID struct {
-	ID string `json:"id,omitempty"`
-}
-
-func NewIDStruct(x string) GqlID {
-	nw := NewID(x)
-	return *nw
-}
-
-func NewID(x string) *GqlID { return &GqlID{x} }
-
-func (id *GqlID) MarshalJSON() ([]byte, error) {
-	return json.Marshal(id.ID)
-}
-
-func (id *GqlID) UnmarshalJSON(data []byte) error {
-	var s *string
-	if err := json.Unmarshal(data, &s); err != nil {
-		return err
-	}
-	if s != nil {
-		id.ID = *s
-	}
-
-	return nil
-}
-
 type GqlBool struct {
 	Bool  bool
 	Valid bool // Valid is true if Bool is not NULL
@@ -199,4 +172,20 @@ func (nt *GqlTime) UnmarshalJSON(data []byte) error {
 		nt.Valid = false
 	}
 	return nil
+}
+
+type GqlPoint struct {
+	//this does not need an ID as it is a scalar type in GraphQL
+
+	Latitude  *GqlFloat64 `json:"latitude,omitempty"`
+	Longitude *GqlFloat64 `json:"longitude,omitempty"`
+}
+
+func NewPointStruct(lat, lng float64) GqlPoint {
+	nw := NewPoint(lat, lng)
+	return *nw
+}
+
+func NewPoint(lat, lng float64) *GqlPoint {
+	return &GqlPoint{Latitude: NewFloat64(lat), Longitude: NewFloat64(lng)}
 }
